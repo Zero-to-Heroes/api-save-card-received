@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Update RDS database with stats on new cards
+
+Globals:
+  Api:
+    # API Gateway regional endpoints
+    EndpointConfiguration: EDGE
+    Cors:
+      AllowMethods: "'*'"
+      AllowHeaders: "'*'"
+      AllowOrigin: "'*'"
+
+Resources:
+  PopulateCardStatsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: com.zerotoheroes.StreamLambdaHandler::handleRequest
+      Runtime: java8
+      CodeUri: target/api-save-card-received-1.0-SNAPSHOT.jar
+      MemorySize: 512
+      Policies:
+        - AWSLambdaVPCAccessExecutionRole
+        - SecretsManagerReadWrite
+      Timeout: 90
+      Events:
+        GetResource:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: any
+
+Outputs:
+  PopulateCArdStatsApi:
+    Description: URL to post card stats
+    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/cardstats'
+    Export:
+      Name: PopulateCardStatsApi
